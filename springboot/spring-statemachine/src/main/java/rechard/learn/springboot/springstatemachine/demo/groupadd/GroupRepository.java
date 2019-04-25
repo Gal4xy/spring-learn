@@ -14,6 +14,7 @@ public class GroupRepository {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    /**
     public void create(Group group){
         jdbcTemplate.update("insert into pagroup(groupId,groupName,status) values (?,?,?)",
                 group.getGroupId(),
@@ -30,6 +31,9 @@ public class GroupRepository {
         Group group = jdbcTemplate.queryForObject("select groupId, groupName,status,isAdvance from pagroup where groupId = ?", new Object[]{groupId},rowMapper());
         return group;
     }
+
+
+
     private RowMapper<Group> rowMapper(){
         return  new RowMapper<Group>() {
             public Group mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -40,4 +44,6 @@ public class GroupRepository {
             }
         };
     }
+    **/
+
 }

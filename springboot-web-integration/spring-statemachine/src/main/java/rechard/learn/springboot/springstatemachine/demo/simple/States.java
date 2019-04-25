@@ -1,5 +1,7 @@
 package rechard.learn.springboot.springstatemachine.demo.simple;
 
 public enum States {
-    SI, S1, S2
+    UNPAID,                 // 待支付
+    WAITING_FOR_RECEIVE,    // 待收货
+    DONE
 }

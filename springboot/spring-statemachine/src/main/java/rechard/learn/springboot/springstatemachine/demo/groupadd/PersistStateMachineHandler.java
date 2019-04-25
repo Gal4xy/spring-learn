@@ -59,15 +59,11 @@ public class PersistStateMachineHandler extends LifecycleObjectSupport {
      * Handle event with entity.
      *
      * @param event the event
-     * @param state the state
+     *
      * @return true if event was accepted
      */
-    public boolean handleEventWithState(Message<ActionType> event, Status state) {
+    public boolean handleEventWithState(ActionType event) {
         stateMachine.stop();
-        List<StateMachineAccess<Status,ActionType>> withAllRegions = stateMachine.getStateMachineAccessor().withAllRegions();
-        for (StateMachineAccess<Status,ActionType> a : withAllRegions) {
-            a.resetStateMachine(new DefaultStateMachineContext<Status,ActionType>(state, null, null, null));
-        }
         stateMachine.start();
         return stateMachine.sendEvent(event);
     }

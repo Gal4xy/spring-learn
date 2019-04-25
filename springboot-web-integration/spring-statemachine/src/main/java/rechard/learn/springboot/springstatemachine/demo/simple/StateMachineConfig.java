@@ -1,5 +1,7 @@
 package rechard.learn.springboot.springstatemachine.demo.simple;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -14,29 +16,23 @@ import org.springframework.statemachine.config.builders.StateMachineTransitionCo
 import org.springframework.statemachine.listener.StateMachineListener;
 import org.springframework.statemachine.listener.StateMachineListenerAdapter;
 import org.springframework.statemachine.state.State;
+import org.springframework.statemachine.transition.Transition;
 
 import java.util.EnumSet;
+
+
 @Configuration
 @EnableStateMachine
 public class StateMachineConfig  extends EnumStateMachineConfigurerAdapter<States, Events> {
 
-   @Override
-    public void configure(StateMachineConfigurationConfigurer<States, Events> config)
-            throws Exception {
-        config
-                .withConfiguration()
-                .machineId("simpleflow")
-                .autoStartup(false)
-                .listener(listener());
-    }
+    private Logger logger = LoggerFactory.getLogger(getClass());
 
     @Override
     public void configure(StateMachineStateConfigurer<States, Events> states)
             throws Exception {
         states
                 .withStates()
-                .initial(States.SI)
-                .end(States.S2)
+                .initial(States.UNPAID)
                 .states(EnumSet.allOf(States.class));
     }
 
@@ -45,32 +41,46 @@ public class StateMachineConfig  extends EnumStateMachineConfigurerAdapter<State
             throws Exception {
         transitions
                 .withExternal()
-                .source(States.SI).target(States.S1).event(Events.E1).and()
+                .source(States.UNPAID).target(States.WAITING_FOR_RECEIVE)
+                .event(Events.PAY)
+                .and()
                 .withExternal()
-                .source(States.S1).target(States.S2).event(Events.E2).action((context)->{
-            System.out.println("event 2 happend");
-        });
+                .source(States.WAITING_FOR_RECEIVE).target(States.DONE)
+                .event(Events.RECEIVE);
+    }
+
+    @Override
+    public void configure(StateMachineConfigurationConfigurer<States, Events> config)
+            throws Exception {
+        config
+                .withConfiguration()
+                .listener(listener());
     }
 
     @Bean
     public StateMachineListener<States, Events> listener() {
         return new StateMachineListenerAdapter<States, Events>() {
-            @Override
-            public void stateChanged(State<States, Events> from, State<States, Events> to) {
-                System.out.println("State change to " + to.getId());
-            }
-        };
-    }
-
-    @Bean
-    public Action<States, Events> action() {
-        return new Action<States, Events>() {
 
             @Override
-            public void execute(StateContext<States, Events> context) {
-                System.out.println("action is play " +  context.getMessage().getPayload());
-                System.out.println("action is play " +  context.getMessage().getHeaders());
+            public void transition(Transition<States, Events> transition) {
+                if(transition.getTarget().getId() == States.UNPAID) {
+                    logger.info("订单创建，待支付");
+                    return;
+                }
+
+                if(transition.getSource().getId() == States.UNPAID
+                        && transition.getTarget().getId() == States.WAITING_FOR_RECEIVE) {
+                    logger.info("用户完成支付，待收货");
+                    return;
+                }
+
+                if(transition.getSource().getId() == States.WAITING_FOR_RECEIVE
+                        && transition.getTarget().getId() == States.DONE) {
+                    logger.info("用户已收货，订单完成");
+                    return;
+                }
             }
+
         };
     }
 }

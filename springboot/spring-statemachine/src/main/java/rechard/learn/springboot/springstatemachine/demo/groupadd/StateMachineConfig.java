@@ -1,20 +1,24 @@
 package rechard.learn.springboot.springstatemachine.demo.groupadd;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.statemachine.config.EnableStateMachine;
+import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.StateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
+import org.springframework.statemachine.listener.StateMachineListener;
 import org.springframework.statemachine.listener.StateMachineListenerAdapter;
 import org.springframework.statemachine.state.State;
+import org.springframework.statemachine.transition.Transition;
 import rechard.learn.springboot.springstatemachine.demo.simple.States;
 
 import java.util.EnumSet;
 
 @Configuration
 @EnableStateMachine
-public class StateMachineConfig extends StateMachineConfigurerAdapter<Status,ActionType>{
+public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Status,ActionType> {
 
 
     @Override
@@ -65,6 +69,37 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<Status,Act
                 .and()
                 .withExternal()
                 .source(Status.PARTIALLY_APPROVED).target(Status.REJECTED).event(ActionType.REJECT);
+    }
+
+
+    @Override
+    public void configure(StateMachineConfigurationConfigurer<Status,ActionType> config)
+            throws Exception {
+        config
+                .withConfiguration()
+                .listener(listener());
+    }
+
+    @Bean
+    public StateMachineListener<Status, ActionType> listener() {
+        return new StateMachineListenerAdapter<Status,ActionType>() {
+
+            @Override
+            public void transition(Transition<Status,ActionType> transition) {
+                if(transition.getTarget().getId() == Status.PARTIALLY_APPROVED) {
+                    System.out.println("订单创建，待支付");
+                    return;
+                }
+
+                if(transition.getSource().getId() == Status.PENGDING_DOCUMENT_CHECK
+                        && transition.getTarget().getId() == Status.PENDING_APPROVAL_CONFIRMATION) {
+                    System.out.println("用户完成支付，待收货");
+                    return;
+                }
+
+            }
+
+        };
     }
 
 }

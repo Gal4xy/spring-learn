@@ -28,6 +28,7 @@ public enum Status {
        }
         throw new IllegalArgumentException("invalid status code");
     }
+
     public String getMsgKey() {
         return msgKey;
     }

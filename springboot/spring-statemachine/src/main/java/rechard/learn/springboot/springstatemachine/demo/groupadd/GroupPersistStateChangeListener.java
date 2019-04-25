@@ -11,17 +11,22 @@ import org.springframework.stereotype.Component;
 @Component
 public class GroupPersistStateChangeListener  implements PersistStateMachineHandler.PersistStateChangeListener {
 
+    /**
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
     public GroupPersistStateChangeListener(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
+     **/
+
+    public GroupPersistStateChangeListener(){}
 
     public void onPersist(State<Status, ActionType> state, Message<ActionType> message, Transition<Status, ActionType> transition, StateMachine<Status, ActionType> stateMachine) {
         if (message != null && message.getHeaders().containsKey("group")) {
             Group group = message.getHeaders().get("group", Group.class);
-            jdbcTemplate.update("update pagroup set status = ? where groupId = ?", state.getId().getStatusCode(), group.getGroupId());
+            //jdbcTemplate.update("update pagroup set status = ? where groupId = ?", state.getId().getStatusCode(), group.getGroupId());
+           System.out.println("----success---");
         }
     }
 }
